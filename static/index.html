@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Actordle</title>
+  </head>
+  <body>
+    <h1>Actordle</h1>
+    <main>
+      <div id="responses">
+        
+      </div>
+      <input id="guess" type="text">
+      <button id="doGuess" onclick="processInput()">Guess</button>
+    </main>
+  </body>
+  <script>
+    document.getElementById("guess").addEventListener("keyup", function(event) {
+        if (event.keyCode == 13) {
+            event.preventDefault();
+            document.getElementById("doGuess").click();
+        } 
+    });
+    function processInput() {
+        makeGuess(document.getElementById("guess").value);
+        document.getElementById("guess").value = "";
+    }
+    function showResponse(r, guess) {
+        let newDiv = document.createElement("div");
+        newDiv.textContent += guess + ": ";
+        if (r.degree == 0) {
+            newDiv.textContent += "Correct!"
+        } else {
+            for (let i = 0; i < r.degree; i++) {
+                newDiv.textContent += '🟨';
+            }
+            newDiv.textContent += " " + r.movies.join(", ")
+        }
+        document.getElementById("responses").appendChild(newDiv);
+    }
+    function makeGuess(guess) {
+        console.log("guessing: " + guess)
+        let httpRequest = new XMLHttpRequest();
+        httpRequest.open('POST', '/guess');
+        httpRequest.setRequestHeader("Content-Type", "application/json");
+        httpRequest.onreadystatechange = function() {
+            if (this.readyState != 4) return;
+            if (this.status == 200) {
+                let r = JSON.parse(this.response);
+                console.log('recieved response', r);
+                if (r.error) {
+                    window.alert(r.error);
+                } else {
+                    showResponse(r, guess);
+                }
+            }
+        };
+        httpRequest.send(JSON.stringify({guess: guess}));            
+    }
+  </script>
+</html>
